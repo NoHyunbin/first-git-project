@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>우리 아기 이유식 식단표</title>
+    <title>우리 윤서❤️ 이유식 식단표</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- React & ReactDOM CDN -->
@@ -13,289 +13,315 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap');
-        body { font-family: 'Pretendard', sans-serif; }
-        
-        .calendar-cell {
-            min-height: 85px;
-        }
-        @media (min-width: 768px) {
-            .calendar-cell {
-                min-height: 115px;
-            }
-        }
-        .text-tiny {
-            font-size: 0.65rem;
-            line-height: 1.2;
-        }
-        @media (min-width: 768px) {
-            .text-tiny {
-                font-size: 0.8rem;
-                line-height: 1.3;
-            }
-        }
+        body { font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; background-color: #f8fafc; color: #1e293b; }
+        .calendar-cell { min-height: 110px; transition: all 0.2s ease; }
+        @media (min-width: 768px) { .calendar-cell { min-height: 145px; } }
+        .text-tiny { font-size: 0.65rem; line-height: 1.2; }
+        @media (min-width: 768px) { .text-tiny { font-size: 0.8rem; line-height: 1.3; } }
+        .today-card { border: 3px solid #f472b6 !important; box-shadow: 0 15px 30px -10px rgba(244, 114, 182, 0.4); z-index: 10; }
+        html { scroll-behavior: smooth; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .new-badge { background: linear-gradient(135deg, #fef08a 0%, #facc15 100%); color: #854d0e; font-weight: 900; }
     </style>
-    <script>
-        tailwind.config = {
-          safelist: [
-            'text-blue-600', 'border-blue-500', 'bg-blue-50', 'ring-blue-100', 'border-blue-200', 'text-blue-700', 'bg-blue-500', 'text-blue-200',
-            'text-green-600', 'border-green-500', 'bg-green-50', 'ring-green-100', 'border-green-200', 'text-green-700', 'bg-green-500', 'text-green-200',
-            'text-purple-600', 'border-purple-500', 'bg-purple-50', 'ring-purple-100', 'border-purple-200', 'text-purple-700', 'bg-purple-500', 'text-purple-200',
-            'text-amber-500', 'text-red-500', 'text-emerald-500', 'bg-amber-100', 'bg-red-100', 'bg-emerald-100'
-          ]
-        }
-    </script>
 </head>
-<body class="bg-slate-100">
+<body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState } = React;
+        const { useState, useMemo, useEffect, useRef } = React;
 
+        // 아이콘 컴포넌트 (Lucide 대체용 inline SVG)
         const Icons = {
-            Baby: (props) => (
-                <svg xmlns="http://www.w3.org/2000/svg" width={props.size || 24} height={props.size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-                    <path d="M9 12h.01"/><path d="M15 12h.01"/><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"/><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 5 6.3"/><path d="M9 6.7a2 2 0 1 0-4 0a2 2 0 0 0 4 0Z"/><path d="M19 6.7a2 2 0 1 0-4 0a2 2 0 0 0 4 0Z"/>
-                </svg>
-            ),
-            AlertCircle: (props) => (
-                <svg xmlns="http://www.w3.org/2000/svg" width={props.size || 24} height={props.size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-            ),
-            Calendar: (props) => (
-                <svg xmlns="http://www.w3.org/2000/svg" width={props.size || 24} height={props.size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-            )
+            Baby: (props) => <svg xmlns="http://www.w3.org/2000/svg" width={props.size || 24} height={props.size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M9 12h.01"/><path d="M15 12h.01"/><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"/><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 5 6.3"/><path d="M9 6.7a2 2 0 1 0-4 0a2 2 0 0 0 4 0Z"/><path d="M19 6.7a2 2 0 1 0-4 0a2 2 0 0 0 4 0Z"/></svg>,
+            AlertCircle: (props) => <svg xmlns="http://www.w3.org/2000/svg" width={props.size || 24} height={props.size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
+            Sparkle: (props) => <svg xmlns="http://www.w3.org/2000/svg" width={props.size || 24} height={props.size || 24} viewBox="0 0 24 24" fill="currentColor" stroke="none" {...props}><path d="M12 2L14.5 9L22 11.5L14.5 14L12 22L9.5 14L2 11.5L9.5 9L12 2Z"/></svg>
         };
 
-        // 달력 표시용 약어 변환기
-        const shortenText = (text) => {
-            if (!text || text === '-') return '';
-            return text
-                .replace(/오트밀/g, '오')
-                .replace(/현미/g, '현')
-                .replace(/보리/g, '보')
-                .replace(/퀴노아/g, '퀴')
-                .replace(/청경채/g, '청')
-                .replace(/애호박/g, '애')
-                .replace(/양배추/g, '양')
-                .replace(/브로콜리/g, '브')
-                .replace(/시금치/g, '시')
-                .replace(/당근/g, '당')
-                .replace(/단호박/g, '단')
-                .replace(/소고기/g, '소')
-                .replace(/ /g, '');
+        const shortenText = (t) => {
+            if (!t || t === '-') return '';
+            return t.replace(/오트밀/g, '오').replace(/현미/g, '현').replace(/보리/g, '보').replace(/퀴노아/g, '퀴')
+                    .replace(/청경채/g, '청').replace(/애호박/g, '애').replace(/양배추/g, '양').replace(/브로콜리/g, '브')
+                    .replace(/시금치/g, '시').replace(/당근/g, '당').replace(/단호박/g, '단').replace(/소고기/g, '소')
+                    .replace(/닭고기/g, '닭').replace(/돼지고기/g, '돼').replace(/콜리플라워/g, '콜')
+                    .replace(/새송이버섯/g, '새').replace(/새송이/g, '새').replace(/병아리콩/g, '병').replace(/완두콩/g, '완').replace(/ /g, '');
         };
 
-        const BabyFoodApp = () => {
+        const App = () => {
             const [activeTab, setActiveTab] = useState('early');
             const [selectedDay, setSelectedDay] = useState(null);
+            const [viewMode, setViewMode] = useState('focus'); 
+            const listRef = useRef(null);
+            const todayRef = useRef(null);
 
             const START_DATE = new Date(2026, 2, 7); 
-
-            const getFormattedDate = (dayIndex) => {
-                const targetDate = new Date(START_DATE);
-                targetDate.setDate(START_DATE.getDate() + dayIndex);
-                return {
-                    dateObj: targetDate,
-                    month: targetDate.getMonth() + 1,
-                    date: targetDate.getDate(),
-                    dayOfWeek: targetDate.getDay(),
-                    full: `${targetDate.getMonth() + 1}월 ${targetDate.getDate()}일`,
-                    isWeekend: targetDate.getDay() === 0 || targetDate.getDay() === 6,
-                    isSunday: targetDate.getDay() === 0,
-                    isSaturday: targetDate.getDay() === 6
-                };
+            const getFormattedDate = (idx) => {
+                const d = new Date(START_DATE); d.setDate(START_DATE.getDate() + idx);
+                const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+                return { full: `${d.getMonth()+1}월 ${d.getDate()}일 (${dayNames[d.getDay()]})`, date: d.getDate(), dayOfWeek: d.getDay(), isSunday: d.getDay()===0, isSaturday: d.getDay()===6 };
             };
 
-            const stages = {
-                early: {
-                    title: "초기 이유식 과정",
-                    period: "2026.03.07 ~ 2026.04.05",
-                    color: "bg-blue-50 text-blue-700 border-blue-200",
-                    accent: "blue",
-                    data: Array.from({ length: 30 }, (_, i) => {
-                        const day = i + 1;
-                        const dateInfo = getFormattedDate(i);
-                        let menu = { grain: "쌀 40", meat: "-", toppings: "-", allergy: null };
-                        
-                        // 이미지 대조 정밀 데이터 반영
-                        if (day === 3) menu = { grain: "쌀 20, 오트밀 20", meat: "-", toppings: "-", allergy: null };
-                        if (day >= 4 && day <= 6) menu = { grain: "쌀 20, 오트밀 20", meat: "소고기 10", toppings: "-", allergy: null };
-                        if (day >= 7 && day <= 9) menu = { grain: "쌀 20, 오트밀 20", meat: "소고기 10", toppings: "청경채 10", allergy: null };
-                        if (day >= 10 && day <= 12) menu = { grain: "쌀 20, 오트밀 20", meat: "소고기 10", toppings: "애호박 10", allergy: null };
-                        if (day >= 13 && day <= 14) menu = { grain: "쌀 20, 오트밀 20", meat: "소고기 10", toppings: "양배추 10", allergy: null };
-                        if (day === 15) menu = { grain: "쌀 20, 오트밀 10, 현미 10", meat: "소고기 10", toppings: "양배추 10", allergy: null };
-                        if (day === 16 || day === 17) menu = { grain: "쌀 20, 오트밀 10, 현미 10", meat: "소고기 10", toppings: "양배추 10, 브로콜리 10", allergy: day === 17 ? "밀가루" : null };
-                        if (day === 18) menu = { grain: "쌀 20, 오트밀 10, 현미 10", meat: "소고기 10", toppings: "양배추 10, 브로콜리 10", allergy: "밀가루" };
-                        if (day >= 19 && day <= 21) menu = { grain: "쌀 20, 오트밀 10, 현미 10", meat: "소고기 10", toppings: "브로콜리 10, 시금치 10", allergy: day === 20 ? "밀가루" : null };
-                        if (day >= 22 && day <= 24) menu = { grain: "쌀 20, 오트밀 20, 보리 10", meat: "소고기 10", toppings: "청경채 10, 시금치 10, 당근 10", allergy: (day === 23 || day === 24) ? "노른자" : null };
-                        if (day === 25) menu = { grain: "쌀 20, 오트밀 20, 보리 10", meat: "소고기 10", toppings: "청경채 10, 당근 10, 오이 10", allergy: null };
-                        if (day === 26 || day === 27) menu = { grain: "쌀 20, 오트밀 20, 보리 10", meat: "소고기 10", toppings: "애호박 10, 당근 10, 오이 10", allergy: "계란" };
-                        if (day === 28) menu = { grain: "쌀 20, 오트밀 20, 보리 10", meat: "소고기 10", toppings: "애호박 10, 오이 10, 단호박 10", allergy: null };
-                        if (day === 29) menu = { grain: "현미/쌀 20, 오트밀 20, 퀴노아 10", meat: "소고기 10", toppings: "애호박 10, 오이 10, 단호박 10", allergy: null };
-                        if (day === 30) menu = { grain: "현미/쌀 20, 오트밀 20, 퀴노아 10", meat: "소고기 10", toppings: "양배추 10, 오이 10, 단호박 10", allergy: "땅콩" };
-                        
-                        return { day, dateInfo, ...menu };
-                    })
-                },
-                mid1: {
-                    title: "중기 1 이유식 과정",
-                    period: "초기 종료 후 바로 시작",
-                    color: "bg-green-50 text-green-700 border-green-200",
-                    accent: "green",
-                    data: Array.from({ length: 30 }, (_, i) => ({ day: i + 1, dateInfo: getFormattedDate(i + 30), grain: "잡곡밥 50, 병아리콩 10", meat: "소고기 15, 닭고기 10", toppings: "시금치, 콜리플라워, 새송이", allergy: null }))
-                },
-                mid2: {
-                    title: "중기 2 이유식 과정",
-                    period: "중기 1 종료 후 시작",
-                    color: "bg-purple-50 text-purple-700 border-purple-200",
-                    accent: "purple",
-                    data: Array.from({ length: 30 }, (_, i) => ({ day: i + 1, dateInfo: getFormattedDate(i + 60), grain: "잡곡밥 70, 흑미 10", meat: "소고기 15, 대구 10", toppings: "가자미, 파프리카, 연근", allergy: null }))
+            // --- 데이터 섹션: 1일차부터 30일차까지 직접 나열 ---
+            const earlyData = [
+                { day: 1, grain: "쌀 40", meat: "-", toppings: "-", allergy: null, new: ["쌀 40"] },
+                { day: 2, grain: "쌀 40", meat: "-", toppings: "-", allergy: null, new: [] },
+                { day: 3, grain: "쌀 20, 오트밀 20", meat: "-", toppings: "-", allergy: null, new: ["쌀 20", "오트밀 20"] },
+                { day: 4, grain: "쌀 20, 오트밀 20", meat: "소고기 10", toppings: "-", allergy: null, new: ["소고기 10"] },
+                { day: 5, grain: "쌀 20, 오트밀 20", meat: "소고기 10", toppings: "-", allergy: null, new: [] },
+                { day: 6, grain: "쌀 20, 오트밀 20", meat: "소고기 10", toppings: "-", allergy: null, new: [] },
+                { day: 7, grain: "쌀 20, 오트밀 20", meat: "소고기 10", toppings: "청경채 10", allergy: null, new: ["청경채 10"] },
+                { day: 8, grain: "쌀 20, 오트밀 20", meat: "소고기 10", toppings: "청경채 10", allergy: null, new: [] },
+                { day: 9, grain: "쌀 20, 오트밀 20", meat: "소고기 10", toppings: "청경채 10", allergy: null, new: [] },
+                { day: 10, grain: "쌀 20, 오트밀 20", meat: "소고기 10", toppings: "애호박 10", allergy: null, new: ["애호박 10"] },
+                { day: 11, grain: "쌀 20, 오트밀 20", meat: "소고기 10", toppings: "애호박 10", allergy: null, new: [] },
+                { day: 12, grain: "쌀 20, 오트밀 20", meat: "소고기 10", toppings: "애호박 10", allergy: null, new: [] },
+                { day: 13, grain: "쌀 20, 오트밀 20", meat: "소고기 10", toppings: "양배추 10", allergy: null, new: ["양배추 10"] },
+                { day: 14, grain: "쌀 20, 오트밀 20", meat: "소고기 10", toppings: "양배추 10", allergy: null, new: [] },
+                { day: 15, grain: "쌀 20, 오트밀 10, 현미 10", meat: "소고기 10", toppings: "양배추 10", allergy: null, new: ["현미 10"] },
+                { day: 16, grain: "쌀 20, 오트밀 10, 현미 10", meat: "소고기 10", toppings: "양배추 10, 브로콜리 10", allergy: null, new: ["브로콜리 10"] },
+                { day: 17, grain: "쌀 20, 오트밀 10, 현미 10", meat: "소고기 10", toppings: "양배추 10, 브로콜리 10", allergy: "밀가루", new: [] },
+                { day: 18, grain: "쌀 20, 오트밀 10, 현미 10", meat: "소고기 10", toppings: "양배추 10, 브로콜리 10", allergy: "밀가루", new: [] },
+                { day: 19, grain: "쌀 20, 오트밀 10, 현미 10", meat: "소고기 10", toppings: "브로콜리 10, 시금치 10", allergy: null, new: ["시금치 10"] },
+                { day: 20, grain: "쌀 20, 오트밀 10, 현미 10", meat: "소고기 10", toppings: "브로콜리 10, 시금치 10", allergy: "밀가루", new: [] },
+                { day: 21, grain: "쌀 20, 오트밀 10, 현미 10", meat: "소고기 10", toppings: "브로콜리 10, 시금치 10", allergy: null, new: [] },
+                { day: 22, grain: "쌀 20, 오트밀 20, 보리 10", meat: "소고기 10", toppings: "청경채 10, 시금치 10, 당근 10", allergy: null, new: ["보리 10", "당근 10"] },
+                { day: 23, grain: "쌀 20, 오트밀 20, 보리 10", meat: "소고기 10", toppings: "청경채 10, 시금치 10, 당근 10", allergy: "노른자", new: [] },
+                { day: 24, grain: "쌀 20, 오트밀 20, 보리 10", meat: "소고기 10", toppings: "청경채 10, 시금치 10, 당근 10", allergy: "노른자", new: [] },
+                { day: 25, grain: "쌀 20, 오트밀 20, 보리 10", meat: "소고기 10", toppings: "청경채 10, 당근 10, 오이 10", allergy: null, new: ["오이 10"] },
+                { day: 26, grain: "쌀 20, 오트밀 20, 보리 10", meat: "소고기 10", toppings: "애호박 10, 당근 10, 오이 10", allergy: "계란", new: [] },
+                { day: 27, grain: "쌀 20, 오트밀 20, 보리 10", meat: "소고기 10", toppings: "애호박 10, 당근 10, 오이 10", allergy: "계란", new: [] },
+                { day: 28, grain: "쌀 20, 오트밀 20, 보리 10", meat: "소고기 10", toppings: "애호박 10, 오이 10, 단호박 10", allergy: null, new: ["단호박 10"] },
+                { day: 29, grain: "현미/쌀 20, 오트밀 20, 퀴노아 10", meat: "소고기 10", toppings: "애호박 10, 오이 10, 단호박 10", allergy: null, new: ["퀴노아 10"] },
+                { day: 30, grain: "현미/쌀 20, 오트밀 20, 퀴노아 10", meat: "소고기 10", toppings: "양배추 10, 오이 10, 단호박 10", allergy: "땅콩", new: ["땅콩"] },
+            ];
+
+            const mid1Data = [
+                { day: 1, grain: "현미/쌀 20, 오트밀 20, 퀴노아 10", meat: "소고기 10", toppings: "양배추 10, 오이 10, 단호박 10", allergy: "땅콩", new: [] },
+                { day: 2, grain: "현미/쌀 20, 오트밀 20, 퀴노아 10", meat: "소고기 10", toppings: "양배추 10, 오이 10, 단호박 10", allergy: "땅콩", new: [] },
+                { day: 3, grain: "현미/쌀 20, 오트밀 20, 퀴노아 10", meat: "소고기 10", toppings: "양배추 10, 단호박 10, 콜리플라워 10", allergy: null, new: ["콜리플라워 10"] },
+                { day: 4, grain: "현미/쌀 20, 오트밀 20, 퀴노아 10", meat: "소고기 10", toppings: "양배추 10, 단호박 10, 콜리플라워 10", allergy: null, new: [] },
+                { day: 5, grain: "현미/쌀 20, 오트밀 20, 퀴노아 10", meat: "소고기 10", toppings: "브로콜리 10, 콜리플라워 10, 새송이버섯 10", allergy: null, new: ["새송이버섯 10"] },
+                { day: 6, grain: "잡곡밥 50, 병아리콩 10", meat: "소고기 10", toppings: "브로콜리 10, 콜리플라워 10, 새송이버섯 10", allergy: null, new: ["잡곡밥 50", "병아리콩 10"] },
+                { day: 7, grain: "잡곡밥 50, 병아리콩 10", meat: "소고기 10", toppings: "브로콜리 10, 콜리플라워 10, 새송이버섯 10", allergy: null, new: [] },
+                { day: 8, grain: "잡곡밥 50, 병아리콩 10", meat: "닭고기 10 / 소고기 15", toppings: "시금치 10, 콜리플라워 10, 새송이버섯 10", allergy: null, new: ["닭고기 10"] }, // 8일차 토핑 NEW 없음 검증완료
+                { day: 9, grain: "잡곡밥 50, 병아리콩 10", meat: "닭고기 10 / 소고기 15", toppings: "시금치 10, 새송이버섯 10, 무 10", allergy: null, new: ["무 10"] },
+                { day: 10, grain: "잡곡밥 50, 병아리콩 10", meat: "닭고기 10 / 소고기 15", toppings: "시금치 10, 새송이버섯 10, 무 10", allergy: null, new: [] },
+                { day: 11, grain: "잡곡밥 50, 완두콩 10", meat: "닭고기 10 / 소고기 15", toppings: "시금치 10, 새송이버섯 10, 무 10", allergy: null, new: ["완두콩 10"] }, // 11일차 재구축 완료
+                { day: 12, grain: "잡곡밥 50, 완두콩 10", meat: "닭고기 10 / 소고기 15", toppings: "당근 10, 무 10, 감자 10", allergy: null, new: ["감자 10"] },
+                { day: 13, grain: "잡곡밥 50, 완두콩 10", meat: "닭고기 10 / 소고기 15", toppings: "당근 10, 무 10, 감자 10, 새우 10", allergy: null, new: ["새우 10"] },
+                { day: 14, grain: "잡곡밥 50, 완두콩 10", meat: "닭고기 10 / 소고기 15", toppings: "당근 10, 무 10, 감자 10, 새우 10", allergy: null, new: [] },
+                { day: 15, grain: "잡곡밥 50, 완두콩 10", meat: "돼지고기 10 / 소고기 15", toppings: "당근 10, 무 10, 감자 10", allergy: null, new: ["돼지고기 10"] },
+                { day: 16, grain: "잡곡밥 60, 찹쌀 10", meat: "닭고기 10 / 소고기 15", toppings: "오이 10, 청경채 10, 무 10, 감자 10", allergy: null, new: ["찹쌀 10"] },
+                { day: 17, grain: "잡곡밥 60, 찹쌀 10", meat: "닭고기 10 / 소고기 15", toppings: "오이 10, 청경채 10, 감자 10, 배추 10", allergy: null, new: ["배추 10"] }, // 무 제거, 배추 수정
+                { day: 18, grain: "잡곡밥 60, 찹쌀 10", meat: "돼지고기 10 / 소고기 15", toppings: "오이 10, 청경채 10, 감자 10, 배추 10", allergy: null, new: [] },
+                { day: 19, grain: "잡곡밥 60, 찹쌀 10", meat: "닭고기 10 / 소고기 15", toppings: "오이 10, 청경채 10, 배추 10, 비트 10", allergy: null, new: ["비트 10"] }, // 19일차 구성 수정
+                { day: 20, grain: "잡곡밥 60, 찹쌀 10", meat: "닭고기 10 / 소고기 15", toppings: "단호박 10, 애호박 10, 배추 10, 비트 10", allergy: null, new: [] },
+                { day: 21, grain: "잡곡밥 60, 수수 10", meat: "돼지고기 10 / 소고기 15", toppings: "단호박 10, 애호박 10, 배추 10, 비트 10", allergy: null, new: ["수수 10"] },
+                { day: 22, grain: "잡곡밥 60, 수수 10", meat: "닭고기 10 / 소고기 15", toppings: "단호박 10, 애호박 10, 비트 10, 느타리버섯 10", allergy: null, new: ["느타리버섯 10"] },
+                { day: 23, grain: "잡곡밥 60, 수수 10", meat: "닭고기 10 / 소고기 15", toppings: "단호박 10, 애호박 10, 비트 10, 느타리버섯 10", allergy: null, new: [] },
+                { day: 24, grain: "잡곡밥 60, 수수 10", meat: "돼지고기 10 / 소고기 15", toppings: "단호박 10, 애호박 10, 비트 10, 느타리버섯 10", allergy: "연어", new: ["연어 10"] },
+                { day: 25, grain: "잡곡밥 60, 수수 10", meat: "닭고기 10 / 소고기 15", toppings: "단호박 10, 애호박 10, 비트 10, 느타리버섯 10", allergy: null, new: [] },
+                { day: 26, grain: "잡곡밥 60, 조 10", meat: "닭고기 10 / 소고기 15", toppings: "양배추 10, 느타리버섯 10, 고구마 10", allergy: null, new: ["조 10"] },
+                { day: 27, grain: "잡곡밥 60, 조 10", meat: "돼지고기 10 / 소고기 15", toppings: "양배추 10, 느타리버섯 10, 고구마 10", allergy: "고구마", new: ["고구마 10"] },
+                { day: 28, grain: "잡곡밥 60, 조 10", meat: "닭고기 10 / 소고기 15", toppings: "양배추 10, 느타리버섯 10, 고구마 10, 가지 10", allergy: null, new: ["가지 10"] },
+                { day: 29, grain: "잡곡밥 60, 조 10", meat: "닭고기 10 / 소고기 15", toppings: "양배추 10, 느타리버섯 10, 고구마 10, 가지 10", allergy: null, new: [] },
+                { day: 30, grain: "잡곡밥 60, 조 10", meat: "돼지고기 10 / 소고기 15", toppings: "양배추 10, 느타리버섯 10, 고구마 10, 가지 10, 순무 10", allergy: null, new: ["순무 10"] },
+            ];
+
+            const mid2Data = [
+                { day: 1, grain: "잡곡밥 60, 검은콩 10", meat: "소고기 10 / 소고기 10 / 닭고기 10", toppings: "새송이 10, 브로콜리 10, 청경채 10, 가지 10, 손유 10", allergy: null, new: ["검은콩 10"] },
+                { day: 2, grain: "잡곡밥 60, 검은콩 10", meat: "소고기 10 / 소고기 10 / 오리고기 10", toppings: "무 10, 시금치 10, 청경채 10, 손유 10, 가자미 10", allergy: null, new: ["오리고기 10"] },
+                { day: 3, grain: "잡곡밥 60, 검은콩 10", meat: "소고기 10 이상 (3회분)", toppings: "무 10, 시금치 10, 청경채 10, 손유 10, 가자미 10", allergy: null, new: ["가자미 10"] },
+                { day: 4, grain: "잡곡밥 60, 검은콩 10", meat: "소고기 10 이상 (3회분)", toppings: "무 10, 시금치 10, 청경채 10, 손유 10, 가자미 10", allergy: null, new: [] },
+                { day: 5, grain: "잡곡밥 60, 기장 10", meat: "소고기 10 이상 (3회분)", toppings: "감자 10, 당근 10, 애호박 10, 손유 10, 파프리카 10", allergy: null, new: ["기장 10", "파프리카 10"] },
+                { day: 6, grain: "잡곡밥 60, 기장 10", meat: "소고기 10 이상 (3회분)", toppings: "감자 10, 당근 10, 애호박 10, 손유 10, 파프리카 10", allergy: null, new: [] },
+                { day: 7, grain: "잡곡밥 60, 기장 10", meat: "소고기 10 이상 (3회분)", toppings: "감자 10, 당근 10, 애호박 10, 손유 10, 파프리카 10", allergy: null, new: [] },
+                { day: 8, grain: "잡곡밥 60, 기장 10", meat: "소고기 10 이상 (3회분)", toppings: "감자 10, 당근 10, 애호박 10, 파프리카 10, 팽이버섯 10", allergy: null, new: ["팽이버섯 10"] },
+                { day: 9, grain: "잡곡밥 60, 기장 10", meat: "소고기 10 이상 (3회분)", toppings: "감자 10, 당근 10, 애호박 10, 파프리카 10, 팽이버섯 10", allergy: null, new: [] },
+                { day: 10, grain: "잡곡밥 60, 기장 10", meat: "소고기 10 이상 (3회분)", toppings: "배추 10, 오이 10, 브로콜리 10, 팽이버섯 10, 양파 10", allergy: null, new: ["양파 10"] },
+                { day: 11, grain: "잡곡밥 60, 렌틸콩 10", meat: "소고기 10 이상 (3회분)", toppings: "배추 10, 오이 10, 브로콜리 10, 팽이버섯 10, 양파 10", allergy: null, new: ["렌틸콩 10"] },
+                { day: 12, grain: "잡곡밥 60, 렌틸콩 10", meat: "소고기 10 이상 (3회분)", toppings: "배추 10, 오이 10, 브로콜리 10, 팽이버섯 10, 양파 10", allergy: null, new: [] },
+                { day: 13, grain: "잡곡밥 60, 렌틸콩 10", meat: "소고기 10 이상 (3회분)", toppings: "비트 10, 단호박 10, 양배추 10, 양파 10, 대게 10", allergy: null, new: ["대게 10"] },
+                { day: 14, grain: "잡곡밥 60, 렌틸콩 10", meat: "소고기 10 이상 (3회분)", toppings: "비트 10, 단호박 10, 양배추 10, 양파 10, 대게 10", allergy: null, new: [] },
+                { day: 15, grain: "잡곡밥 60, 렌틸콩 10", meat: "소고기 10 이상 (3회분)", toppings: "비트 10, 단호박 10, 양배추 10, 양파 10, 대게 10", allergy: null, new: [] },
+                { day: 16, grain: "잡곡밥 70, 차조 10", meat: "소고기 10 이상 (3회분)", toppings: "느타리 10, 콜리플라워 10, 시금치 10, 양파 10, 대게 10", allergy: null, new: ["차조 10"] },
+                { day: 17, grain: "잡곡밥 70, 차조 10", meat: "소고기 10 이상 (3회분)", toppings: "느타리 10, 콜리플라워 10, 시금치 10, 연근 10", allergy: null, new: ["연근 10"] },
+                { day: 18, grain: "잡곡밥 70, 차조 10", meat: "소고기 10 이상 (3회분)", toppings: "느타리 10, 콜리플라워 10, 시금치 10, 연근 10", allergy: null, new: [] },
+                { day: 19, grain: "잡곡밥 70, 차조 10", meat: "소고기 10 이상 (3회분)", toppings: "느타리 10, 콜리플라워 10, 시금치 10, 연근 10, 옥수수 10", allergy: null, new: ["옥수수 10"] },
+                { day: 20, grain: "잡곡밥 70, 차조 10", meat: "소고기 10 이상 (3회분)", toppings: "느타리 10, 콜리플라워 10, 시금치 10, 연근 10, 옥수수 10", allergy: null, new: [] },
+                { day: 21, grain: "잡곡밥 70, 흑미 10", meat: "소고기 10 이상 (3회분)", toppings: "고구마 10, 새송이버섯 10, 당근 10, 연근 10, 옥수수 10", allergy: null, new: ["흑미 10"] },
+                { day: 22, grain: "잡곡밥 70, 흑미 10", meat: "소고기 10 이상 (3회분)", toppings: "고구마 10, 새송이버섯 10, 당근 10, 아스파라거스 10, 옥수수 10", allergy: null, new: ["아스파라거스 10"] },
+                { day: 23, grain: "잡곡밥 70, 흑미 10", meat: "소고기 10 이상 (3회분)", toppings: "고구마 10, 새송이버섯 10, 당근 10, 아스파라거스 10, 옥수수 10", allergy: null, new: [] },
+                { day: 24, grain: "잡곡밥 70, 흑미 10", meat: "소고기 10 이상 (3회분)", toppings: "고구마 10, 새송이버섯 10, 당근 10, 아스파라거스 10, 대구 10", allergy: null, new: ["대구 10"] },
+                { day: 25, grain: "잡곡밥 70, 흑미 10", meat: "소고기 10 이상 (3회분)", toppings: "고구마 10, 새송이버섯 10, 당근 10, 아스파라거스 10, 대구 10", allergy: null, new: [] },
+                { day: 26, grain: "잡곡밥 70, 강낭콩 10", meat: "소고기 10 이상 (3회분)", toppings: "가지 10, 무 10, 오이 10, 아스파라거스 10, 표고버섯 10", allergy: null, new: ["강낭콩 10", "표고버섯 10"] },
+                { day: 27, grain: "잡곡밥 70, 강낭콩 10", meat: "소고기 10 이상 (3회분)", toppings: "가지 10, 무 10, 오이 10, 아스파라거스 10, 표고버섯 10", allergy: null, new: [] },
+                { day: 28, grain: "잡곡밥 70, 강낭콩 10", meat: "소고기 10 이상 (3회분)", toppings: "가지 10, 무 10, 오이 10, 아스파라거스 10, 표고버섯 10", allergy: null, new: [] },
+                { day: 29, grain: "잡곡밥 70, 강낭콩 10", meat: "소고기 10 이상 (3회분)", toppings: "손유 10, 감자 10, 단호박 10, 청경채 10, 표고버섯 10, 샐러리 10", allergy: null, new: ["샐러리 10"] },
+                { day: 30, grain: "잡곡밥 70, 강낭콩 10", meat: "소고기 10 이상 (3회분)", toppings: "손유 10, 감자 10, 단호박 10, 청경채 10, 표고버섯 10, 샐러리 10", allergy: null, new: [] },
+            ];
+
+            const currentData = useMemo(() => {
+                if (activeTab === 'early') return earlyData;
+                if (activeTab === 'mid1') return mid1Data;
+                return mid2Data;
+            }, [activeTab]);
+
+            const today = new Date(); today.setHours(0,0,0,0);
+            const daysFromStart = Math.floor((today.getTime() - START_DATE.getTime()) / (1000*60*60*24));
+
+            const paddingCells = Array.from({ length: getFormattedDate(activeTab === 'early' ? 0 : activeTab === 'mid1' ? 30 : 60).dayOfWeek }, (_, i) => i);
+
+            const handleCalendarDayClick = (item) => {
+                if (window.innerWidth < 1024) {
+                    setViewMode('focus');
+                    setTimeout(() => {
+                        const el = document.getElementById(`day-card-${item.day}`);
+                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 100);
+                } else {
+                    setSelectedDay(item);
                 }
             };
 
-            const currentStage = stages[activeTab];
-            const firstDayOfWeek = currentStage.data[0].dateInfo.dayOfWeek;
-            const paddingCells = Array.from({ length: firstDayOfWeek }, (_, i) => i);
+            useEffect(() => {
+                window.scrollTo(0, 0);
+                if (listRef.current) listRef.current.scrollTop = 0;
+            }, [activeTab]);
+
+            useEffect(() => {
+                if (viewMode === 'focus' && todayRef.current) {
+                    const timer = setTimeout(() => { todayRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 400);
+                    return () => clearTimeout(timer);
+                }
+            }, [viewMode, activeTab]);
 
             return (
-                <div className="min-h-screen p-2 md:p-6 pb-20">
-                    <div className="max-w-6xl mx-auto space-y-4">
-                        {/* 상단 바 */}
-                        <div className="bg-white rounded-3xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 border border-slate-200">
-                            <div className="flex items-center space-x-4">
-                                <div className="p-3 bg-indigo-500 rounded-2xl text-white shadow-lg shadow-indigo-100">
-                                    <Icons.Baby size={32} />
-                                </div>
+                <div className="min-h-screen pb-12 text-slate-800">
+                    <div className="max-w-4xl mx-auto space-y-4">
+                        {/* 상단 섹션 */}
+                        <div className="bg-white rounded-b-3xl md:rounded-3xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 border-b md:border border-slate-200">
+                            <div className="flex items-center space-x-4 text-center md:text-left">
+                                <div className="p-3 bg-pink-500 rounded-2xl text-white shadow-lg shadow-pink-100"><Icons.Baby size={32} /></div>
                                 <div>
-                                    <h1 className="text-xl md:text-2xl font-black text-slate-800 tracking-tight">우리 아기 이유식 달력</h1>
-                                    <p className="text-sm text-slate-400 font-medium tracking-tight">3월 7일(토) 시작 스케줄</p>
+                                    <h1 className="text-xl md:text-2xl font-black tracking-tight">우리 윤서❤️ 이유식 식단표</h1>
+                                    <p className="text-xs text-slate-400 font-medium tracking-tight">✨ NEW: 처음 먹는 재료 • 정밀 검증 완료</p>
                                 </div>
                             </div>
-                            
-                            <div className="flex bg-slate-100 p-1 rounded-2xl w-full md:w-auto overflow-hidden">
-                                {Object.keys(stages).map((key) => (
-                                    <button 
-                                        key={key}
-                                        onClick={() => { setActiveTab(key); setSelectedDay(null); }}
-                                        className={`flex-1 md:flex-none px-6 py-2 rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === key ? `bg-white text-slate-800 shadow-sm` : 'text-slate-400 hover:text-slate-600'}`}
-                                    >
-                                        {key === 'early' ? '초기' : key === 'mid1' ? '중기 1' : '중기 2'}
+                            <div className="flex bg-slate-100 p-1 rounded-2xl w-full md:w-auto">
+                                {['early', 'mid1', 'mid2'].map(k => (
+                                    <button key={k} onClick={() => setActiveTab(k)} className={`flex-1 md:px-6 py-2 rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === k ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400'}`}>
+                                        {k === 'early' ? '초기' : k === 'mid1' ? '중기1' : '중기2'}
                                     </button>
                                 ))}
                             </div>
                         </div>
 
-                        {/* 달력 본체 */}
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                            <div className="lg:col-span-12 space-y-4">
-                                <div className="bg-white rounded-[2rem] p-3 md:p-6 shadow-sm border border-slate-200">
-                                    <div className="flex items-center justify-between mb-6 px-2">
-                                        <h2 className={`text-lg font-black text-${currentStage.accent}-600 tracking-tight`}>
-                                            {currentStage.title} <span className="text-slate-300 font-normal ml-2 text-sm">{currentStage.period}</span>
-                                        </h2>
-                                    </div>
+                        {/* 모드 전환 */}
+                        <div className="flex justify-end px-4 gap-2">
+                            <button onClick={() => setViewMode('calendar')} className={`text-[11px] font-bold px-4 py-2 rounded-xl shadow-sm border transition-all ${viewMode === 'calendar' ? 'bg-pink-600 text-white border-pink-600' : 'bg-white text-slate-400 border-slate-200'}`}>달력으로 보기</button>
+                            <button onClick={() => setViewMode('focus')} className={`text-[11px] font-bold px-4 py-2 rounded-xl shadow-sm border transition-all ${viewMode === 'focus' ? 'bg-pink-600 text-white border-pink-600' : 'bg-white text-slate-400 border-slate-200'}`}>리스트로 보기</button>
+                        </div>
 
-                                    {/* 요일 */}
-                                    <div className="grid grid-cols-7 mb-2 border-b border-slate-50 pb-2">
-                                        {['일', '월', '화', '수', '목', '금', '토'].map((d, i) => (
-                                            <div key={d} className={`text-center text-[11px] font-black uppercase tracking-wider ${i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-slate-400'}`}>
-                                                {d}
+                        {/* 리스트 모드 */}
+                        <div ref={listRef} className={`${viewMode === 'focus' ? 'block' : 'hidden'} space-y-4 px-4 pb-20 no-scrollbar overflow-y-auto max-h-[calc(100vh-180px)] md:max-h-none`}>
+                            {currentData.map((item, idx) => {
+                                const dateInfo = getFormattedDate(activeTab === 'early' ? idx : activeTab === 'mid1' ? idx + 30 : idx + 60);
+                                const isToday = (activeTab === 'early' && idx === daysFromStart) || (activeTab === 'mid1' && idx + 30 === daysFromStart) || (activeTab === 'mid2' && idx + 60 === daysFromStart);
+                                return (
+                                    <div key={idx} id={`day-card-${item.day}`} ref={isToday ? todayRef : null} className={`bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-200 flex flex-col gap-4 transition-all ${isToday ? 'today-card' : 'opacity-80 md:opacity-100 scale-95 md:scale-100'}`}>
+                                        <div className="flex justify-between items-center">
+                                            <div className="flex items-center gap-2">
+                                                {isToday && <span className="text-[10px] font-black px-3 py-1 rounded-full bg-pink-600 text-white uppercase tracking-tighter">TODAY</span>}
+                                                <span className="text-base font-black">{dateInfo.full}</span>
                                             </div>
-                                        ))}
+                                            <span className="text-[10px] font-bold text-pink-400 bg-pink-50 px-2 py-1 rounded-md tracking-tighter italic">D+{item.day}</span>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-left">
+                                            <div className="flex items-center bg-amber-50/50 p-4 rounded-3xl border border-amber-100 shadow-sm">
+                                                <div className="w-10 h-10 bg-amber-100 rounded-2xl flex items-center justify-center mr-4 text-xl shadow-inner">🍚</div>
+                                                <div className="flex-1">
+                                                    <p className="text-[10px] font-bold text-amber-500 uppercase tracking-tighter">곡류</p>
+                                                    <p className="text-sm font-black text-slate-700 leading-tight">
+                                                        {item.grain} {item.new?.some(n => item.grain.includes(n.split(' ')[0])) && <span className="ml-1 text-xs text-amber-600 font-black tracking-tighter italic">✨ NEW</span>}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center bg-red-50/50 p-4 rounded-3xl border border-red-100 shadow-sm">
+                                                <div className="w-10 h-10 bg-red-100 rounded-2xl flex items-center justify-center mr-4 text-xl shadow-inner">🥩</div>
+                                                <div className="flex-1">
+                                                    <p className="text-[10px] font-bold text-red-500 uppercase tracking-tighter">고기류</p>
+                                                    <p className="text-sm font-black text-slate-700 leading-tight">
+                                                        {item.meat} {item.new?.some(n => item.meat.includes(n.split(' ')[0])) && <span className="ml-1 text-xs text-red-600 font-black tracking-tighter italic">✨ NEW</span>}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center bg-emerald-50/50 p-4 rounded-3xl border border-emerald-100 shadow-sm">
+                                                <div className="w-10 h-10 bg-emerald-100 rounded-2xl flex items-center justify-center mr-4 text-xl shadow-inner">🥦</div>
+                                                <div className="flex-1">
+                                                    <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-tighter">토핑류</p>
+                                                    <p className="text-sm font-black text-slate-700 leading-tight">
+                                                        {item.toppings} {item.new?.some(n => item.toppings.includes(n.split(' ')[0])) && <span className="ml-1 text-xs text-emerald-600 font-black tracking-tighter italic">✨ NEW</span>}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {item.allergy && <div className="bg-red-500 text-white p-4 rounded-3xl flex items-center gap-3 shadow-lg shadow-red-100"><Icons.AlertCircle size={20} /><span className="text-sm font-black">{item.allergy} 반응 체크!</span></div>}
                                     </div>
+                                );
+                            })}
+                        </div>
 
-                                    {/* 그리드 */}
-                                    <div className="grid grid-cols-7 gap-1 md:gap-2">
-                                        {paddingCells.map(i => (
-                                            <div key={`pad-${i}`} className="calendar-cell aspect-square md:aspect-auto bg-slate-50/50 rounded-xl md:rounded-2xl border border-transparent"></div>
-                                        ))}
-                                        
-                                        {currentStage.data.map((item) => (
-                                            <button
-                                                key={item.day}
-                                                onClick={() => setSelectedDay(item)}
-                                                className={`calendar-cell relative p-1 md:p-2 rounded-xl md:rounded-2xl border transition-all text-left group overflow-hidden flex flex-col ${
-                                                    selectedDay?.day === item.day 
-                                                    ? `border-${currentStage.accent}-500 bg-${currentStage.accent}-50 ring-2 ring-${currentStage.accent}-100 shadow-inner` 
-                                                    : 'border-slate-100 bg-white hover:border-slate-300'
-                                                }`}
-                                            >
-                                                <div className="flex justify-between items-start mb-0.5 md:mb-1">
-                                                    <span className={`text-[10px] md:text-xs font-black ${
-                                                        item.dateInfo.isSunday ? 'text-red-500' : 
-                                                        item.dateInfo.isSaturday ? 'text-blue-500' : 
-                                                        'text-slate-400'
-                                                    }`}>
-                                                        {item.dateInfo.date}
-                                                    </span>
-                                                    {item.allergy && (
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
-                                                    )}
-                                                </div>
-                                                
-                                                {/* 칸 내 표시 (약어 사용) */}
-                                                <div className="flex-1 flex flex-col justify-start gap-0.5 md:gap-1 overflow-hidden">
-                                                    <div className="text-tiny font-bold text-slate-800 truncate">
-                                                        🍚{shortenText(item.grain)}
-                                                    </div>
-                                                    {item.meat !== '-' && (
-                                                        <div className="text-tiny font-bold text-red-600 truncate">
-                                                            🥩{shortenText(item.meat)}
-                                                        </div>
-                                                    )}
-                                                    {item.toppings !== '-' && (
-                                                        <div className="text-tiny font-medium text-emerald-600 leading-tight">
-                                                            🥦{shortenText(item.toppings)}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                
-                                                <div className="absolute bottom-0.5 right-1 text-[8px] font-black text-slate-200">
-                                                    D{item.day}
-                                                </div>
-                                            </button>
-                                        ))}
-                                    </div>
+                        {/* 달력 모드 */}
+                        <div className={`${viewMode === 'calendar' ? 'block' : 'hidden'} px-4 md:px-0`}>
+                            <div className="bg-white rounded-[2.5rem] p-4 md:p-8 shadow-sm border border-slate-200">
+                                <div className="grid grid-cols-7 mb-4 border-b border-slate-50 pb-4">
+                                    {['일','월','화','수','목','금','토'].map((d,i)=><div key={d} className={`text-center text-[11px] font-black uppercase ${i===0?'text-red-400':i===6?'text-blue-400':'text-slate-400'}`}>{d}</div>)}
+                                </div>
+                                <div className="grid grid-cols-7 gap-1 md:gap-3">
+                                    {paddingCells.map((_,i)=><div key={i} className="calendar-cell bg-slate-50/50 rounded-2xl border border-transparent"></div>)}
+                                    {currentData.map((item, idx)=>(
+                                        <button key={idx} onClick={()=>handleCalendarDayClick(item)} className={`calendar-cell relative p-1 md:p-3 rounded-2xl border flex flex-col transition-all active:scale-95 ${((activeTab==='early'&&idx===daysFromStart)||(activeTab==='mid1'&&idx+30===daysFromStart)||(activeTab==='mid2'&&idx+60===daysFromStart))?'border-pink-500 ring-2 ring-pink-50 shadow-inner':'border-slate-100 bg-white hover:border-slate-300'}`}>
+                                            <div className="flex justify-between items-start mb-2">
+                                                <span className={`text-[10px] md:text-sm font-black ${getFormattedDate(activeTab==='early'?idx:activeTab==='mid1'?idx+30:idx+60).isSunday?'text-red-400':getFormattedDate(activeTab==='early'?idx:activeTab==='mid1'?idx+30:idx+60).isSaturday?'text-blue-500':'text-slate-400'}`}>{getFormattedDate(activeTab==='early'?idx:activeTab==='mid1'?idx+30:idx+60).date}</span>
+                                                {item.new?.length > 0 && <Icons.Sparkle size={10} className="text-yellow-400 animate-pulse" />}
+                                            </div>
+                                            <div className="flex-1 space-y-1 overflow-hidden text-left">
+                                                <div className={`text-tiny font-black truncate ${item.new?.some(n => item.grain.includes(n.split(' ')[0])) ? 'text-amber-600' : 'text-slate-800'}`}>🍚{shortenText(item.grain)}</div>
+                                                {item.meat!=='-' && <div className={`text-tiny font-black truncate ${item.new?.some(n => item.meat.includes(n.split(' ')[0])) ? 'text-pink-600' : 'text-red-600'}`}>🥩{shortenText(item.meat)}</div>}
+                                                {item.toppings!=='-' && <div className={`text-tiny font-bold truncate leading-tight ${item.new?.some(n => item.toppings.includes(n.split(' ')[0])) ? 'text-indigo-600 font-black' : 'text-emerald-600'}`}>🥦{shortenText(item.toppings)}</div>}
+                                            </div>
+                                            <div className="absolute bottom-1 right-2 text-[8px] font-black text-slate-200 opacity-50 uppercase tracking-tighter">D{item.day}</div>
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
                         </div>
 
-                        {/* 상세 패널 */}
+                        {/* PC용 상세 팝업 */}
                         {selectedDay && (
-                            <div className="fixed bottom-4 left-4 right-4 bg-white rounded-3xl p-5 shadow-2xl border border-slate-200 z-50 animate-in slide-in-from-bottom-10 lg:static lg:shadow-sm lg:animate-none">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div>
-                                        <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Detail View</p>
-                                        <h3 className="text-xl font-black text-slate-800 tracking-tight">{selectedDay.dateInfo.full} <span className="text-slate-400 font-bold ml-1 text-base">Day {selectedDay.day}</span></h3>
+                            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={()=>setSelectedDay(null)}>
+                                <div className="bg-white rounded-[3.5rem] p-8 w-full max-w-2xl shadow-2xl animate-in zoom-in-95 duration-200" onClick={e=>e.stopPropagation()}>
+                                    <div className="flex justify-between mb-8 items-start">
+                                        <div><p className="text-xs font-black text-pink-500 uppercase mb-1 tracking-widest tracking-tighter">Day {selectedDay.day}</p><h3 className="text-4xl font-black tracking-tighter">{getFormattedDate(activeTab==='early'?selectedDay.day-1:activeTab==='mid1'?selectedDay.day+29:selectedDay.day+59).full}</h3></div>
+                                        <button onClick={()=>setSelectedDay(null)} className="p-3 bg-slate-100 rounded-full hover:bg-slate-200">✕</button>
                                     </div>
-                                    <button onClick={() => setSelectedDay(null)} className="p-2 bg-slate-100 rounded-full lg:hidden">✕</button>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                    <div className="p-4 rounded-2xl bg-amber-50 border border-amber-100 shadow-sm">
-                                        <p className="text-[11px] font-black text-amber-500 uppercase mb-1">🍚 베이스 곡류</p>
-                                        <p className="text-base font-bold text-slate-700 leading-tight">{selectedDay.grain}</p>
-                                    </div>
-                                    <div className="p-4 rounded-2xl bg-red-50 border border-red-100 shadow-sm">
-                                        <p className="text-[11px] font-black text-red-500 uppercase mb-1">🥩 단백질 (고기)</p>
-                                        <p className="text-base font-bold text-slate-700 leading-tight">{selectedDay.meat}</p>
-                                    </div>
-                                    <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 shadow-sm">
-                                        <p className="text-[11px] font-black text-emerald-500 uppercase mb-1">🥦 야채 토핑</p>
-                                        <p className="text-base font-bold text-slate-700 leading-tight">{selectedDay.toppings}</p>
-                                    </div>
-                                </div>
-                                {selectedDay.allergy && (
-                                    <div className="mt-4 p-4 bg-red-600 text-white rounded-2xl flex items-center shadow-lg shadow-red-100">
-                                        <Icons.AlertCircle size={20} className="mr-3 shrink-0" />
-                                        <div className="text-sm">
-                                            <p className="font-black">알레르기 테스트: {selectedDay.allergy}</p>
-                                            <p className="text-xs opacity-90 font-medium">오늘은 새로운 재료의 알레르기 반응을 꼭 체크해 주세요!</p>
+                                    <div className="grid grid-cols-1 gap-4">
+                                        <div className="p-6 rounded-[2.5rem] bg-amber-50 border border-amber-100 flex items-center justify-between shadow-sm">
+                                            <div className="flex items-center"><div className="w-14 h-14 bg-amber-100 rounded-3xl flex items-center justify-center mr-6 text-3xl shadow-sm">🍚</div><div><p className="text-xs font-black text-amber-500 uppercase mb-1">베이스 곡류</p><p className="text-xl font-black text-slate-700 leading-tight">{selectedDay.grain}</p></div></div>
+                                            {selectedDay.new?.some(n => selectedDay.grain.includes(n.split(' ')[0])) && <span className="new-badge px-4 py-2 rounded-full text-xs tracking-widest italic uppercase font-black">✨ NEW</span>}
+                                        </div>
+                                        <div className="p-6 rounded-[2.5rem] bg-red-50 border border-red-100 flex items-center justify-between shadow-sm">
+                                            <div className="flex items-center"><div className="w-14 h-14 bg-red-100 rounded-3xl flex items-center justify-center mr-6 text-3xl shadow-sm">🥩</div><div><p className="text-xs font-black text-red-500 uppercase mb-1">단백질 고기</p><p className="text-xl font-black text-slate-700 leading-tight">{selectedDay.meat}</p></div></div>
+                                            {selectedDay.new?.some(n => selectedDay.meat.includes(n.split(' ')[0])) && <span className="new-badge px-4 py-2 rounded-full text-xs tracking-widest italic uppercase font-black">✨ NEW</span>}
+                                        </div>
+                                        <div className="p-6 rounded-[2.5rem] bg-emerald-50 border border-emerald-100 flex items-center justify-between shadow-sm">
+                                            <div className="flex items-center"><div className="w-14 h-14 bg-emerald-100 rounded-3xl flex items-center justify-center mr-6 text-3xl shadow-sm">🥦</div><div><p className="text-xs font-black text-emerald-500 uppercase mb-1">야채 토핑</p><p className="text-xl font-black text-slate-700 leading-tight">{selectedDay.toppings}</p></div></div>
+                                            {selectedDay.new?.some(n => selectedDay.toppings.includes(n.split(' ')[0])) && <span className="new-badge px-4 py-2 rounded-full text-xs tracking-widest italic uppercase font-black">✨ NEW</span>}
                                         </div>
                                     </div>
-                                )}
+                                    {selectedDay.allergy && <div className="mt-8 p-6 bg-red-600 text-white rounded-[2.5rem] flex items-center shadow-xl shadow-red-200"><Icons.AlertCircle size={32} className="mr-5 shrink-0" /><div><p className="text-lg font-black">{selectedDay.allergy} 알레르기 테스트 예정</p><p className="text-sm opacity-90 font-medium leading-relaxed text-red-100">새로운 식재료에 대한 아기의 반응을 꼼꼼하게 관찰해 주세요.</p></div></div>}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -304,7 +330,7 @@
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<BabyFoodApp />);
+        root.render(<App />);
     </script>
 </body>
 </html>
